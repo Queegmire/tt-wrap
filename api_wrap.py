@@ -1,6 +1,7 @@
 import requests
 import getpass
 import json
+import config
 
 
 class TTRSSSession(object):
@@ -311,8 +312,15 @@ def getFeedTree():
 
 
 def test():
-    user = input("User: ")
-    password = getpass.getpass("Password: ")
+    if config.user:
+        user = config.user
+    else:
+        user = input("User: ")
+
+    if config.password:
+        password = config.password
+    else:
+        password = getpass.getpass("Password: ")
     apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
     session = TTRSSSession(apiURL, user, password)
     print("ApiLevel: ", session.apiLevel)
