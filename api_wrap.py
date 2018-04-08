@@ -2,80 +2,42 @@ import requests
 import getpass
 import json
 
-apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
-sessionID = ""
 
+class TTRSSSession(object):
+    """docstring for TTRSSSession"""
 
-def callAPI(apiRequest):
-    response = requests.post(apiURL, json=apiRequest)
-    r_data = json.loads(response.text)
-    return r_data
+    def __init__(self, URL, user, password):
+        self.sid = ""
+        self.URL = URL
+        self.login(user, password)
 
+    def login(self, user, password):
+        apiData = {"user": user, "password": password}
+        response = self.callAPI("login", apiData)
+        self.sid = response['content']['session_id']
+        return self.sid
 
-def getApiLevel():
-    '''
-    since version:1.5.8, api level 1
-    Return an abstracted integer API version level, increased with each API
-    functionality change. This is the proper way to detect host API
-    functionality, instead of using getVersion.
-    {"level":1}
-    Whether tt-rss returns error for this method (e.g. version:1.5.7 and below)
-    client should assume API level 0.
-    '''
-    pass
+    def logout(self):
+        response = self.callAPI("logout")
+        self.sid = ""
 
+    def callAPI(self, operation, data={}):
+        data["op"] = operation
+        data["sid"] = self.sid
+        response = requests.post(self.URL, json=data)
+        return json.loads(response.text)
 
-def getVersion():
-    '''
-    Returns tt-rss version. As of, version:1.5.8 it is not recommended to use
-    this to detect API functionality, please use getApiLevel instead.
-    {"version":"1.4.0"}
-    '''
-    pass
+    def getApiLevel(self):
+        response = self.callAPI("getApiLevel")
+        return response['content']['level']
 
+    def getVersion(self):
+        response = self.callAPI("getVersion")
+        return response['content']['version']
 
-def login(user, password):
-    '''
-    Returns client session ID.
-    {"session\_id":"xxx"}
-    It can also return several error objects:
-        If API is disabled for this user: error: "API_DISABLED"
-        If specified username and password are incorrect: error: "LOGIN_ERROR"
-        In case it isn’t immediately obvious, you have to login and get a
-            session ID even if you are using single user mode. You can omit
-            user and password parameters.
-    On version:1.6.0 and above login also returns current API level as an
-    api_level integer, you can use that instead of calling getApiLevel after
-    login.
-    '''
-    global sessionID
-    apiCall = {"op": "login", "user": user, "password": password}
-    response = callAPI(apiCall)
-    sessionID = response['content']['session_id']
-    print('login response: ', response)
-    return response
-
-
-def logout():
-    '''
-    Closes your login session. Returns either status-message {"status":"OK"}
-    or an error (e.g. {"error":"NOT_LOGGED_IN"})
-    '''
-    global sessionID
-    apiCall = {"op": "logout", "sid": sessionID}
-    response = callAPI(apiCall)
-    print('logout response: ', response)
-    return response
-
-
-def isLoggedIn():
-    '''
-    Returns a status message with boolean value showing whether your client
-    (e.g. specific session ID) is currently logged in.
-    {"status":false}
-    '''
-    pass
-
+    def isLoggedIn(self):
+        response = self.callAPI("isLoggedIn")
+        return response['content']['status']
 
 def getUnread():
     '''
@@ -83,7 +45,6 @@ def getUnread():
     {"unread":"992"}
     '''
     pass
-
 
 def getCounters(output_mode):
     '''
@@ -101,7 +62,6 @@ def getCounters(output_mode):
         output_mode.
     '''
     pass
-
 
 def getFeeds(cat_id, unread_only, limit, offset, include_nested):
     '''
@@ -130,7 +90,6 @@ def getFeeds(cat_id, unread_only, limit, offset, include_nested):
     '''
     pass
 
-
 def getCategories():
     '''
     Returns JSON-encoded list of categories with unread counts.
@@ -145,7 +104,6 @@ def getCategories():
     traverse deeper.
     '''
     pass
-
 
 def getHeadlines():
     '''
@@ -197,7 +155,6 @@ def getHeadlines():
     '''
     pass
 
-
 def updateArticle():
     '''
     Update information on specified articles.
@@ -218,7 +175,6 @@ def updateArticle():
     '''
     pass
 
-
 def getArticle():
     '''
     Requests JSON-encoded article object with specific ID.
@@ -227,7 +183,6 @@ def getArticle():
     Since version:1.4.3 also returns article attachments.
     '''
     pass
-
 
 def getConfig():
     '''
@@ -242,7 +197,6 @@ def getConfig():
     '''
     pass
 
-
 def updateFeed():
     '''
     Tries to update specified feed. This operation is not performed in the
@@ -254,7 +208,6 @@ def updateFeed():
     '''
     pass
 
-
 def getPref():
     '''
     Returns preference value of specified key.
@@ -262,7 +215,6 @@ def getPref():
         {"value":true}
     '''
     pass
-
 
 def catchupFeed():
     '''
@@ -275,7 +227,6 @@ def catchupFeed():
         {"status":"OK"}
     '''
     pass
-
 
 def getLabels():
     '''
@@ -295,7 +246,6 @@ def getLabels():
     '''
     pass
 
-
 def setArticleLabel():
     '''
     (since API level 1)
@@ -312,7 +262,6 @@ def setArticleLabel():
     '''
     pass
 
-
 def shareToPublished():
     '''
     (since API level 4 - version:1.6.0)
@@ -323,7 +272,6 @@ def shareToPublished():
         content - Article content (string)
     '''
     pass
-
 
 def subscribeToFeed():
     '''
@@ -338,7 +286,6 @@ def subscribeToFeed():
     '''
     pass
 
-
 def unsubscribeFeed():
     '''
     (API level 5 - version:1.7.6)
@@ -347,7 +294,6 @@ def unsubscribeFeed():
         feed_id - Feed id to unsubscribe from
     '''
     pass
-
 
 def getFeedTree():
     '''
@@ -363,8 +309,12 @@ def getFeedTree():
 def test():
     user = input("User: ")
     password = getpass.getpass("Password: ")
-    login(user, password)
-    logout()
+    apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
+    session = TTRSSSession(apiURL, user, password)
+    print("ApiLevel: ", session.getApiLevel())
+    print("Version: ", session.getVersion())
+    print("LoggedIn: ", session.isLoggedIn())
+    session.logout()
 
 
 if __name__ == '__main__':
