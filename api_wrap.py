@@ -27,17 +27,21 @@ class TTRSSSession(object):
         response = requests.post(self.URL, json=data)
         return json.loads(response.text)
 
-    def getApiLevel(self):
+    @property
+    def apiLevel(self):
         response = self.callAPI("getApiLevel")
         return response['content']['level']
 
-    def getVersion(self):
+    @property
+    def version(self):
         response = self.callAPI("getVersion")
         return response['content']['version']
 
-    def isLoggedIn(self):
+    @property
+    def loggedIn(self):
         response = self.callAPI("isLoggedIn")
         return response['content']['status']
+
 
 def getUnread():
     '''
@@ -311,9 +315,9 @@ def test():
     password = getpass.getpass("Password: ")
     apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
     session = TTRSSSession(apiURL, user, password)
-    print("ApiLevel: ", session.getApiLevel())
-    print("Version: ", session.getVersion())
-    print("LoggedIn: ", session.isLoggedIn())
+    print("ApiLevel: ", session.apiLevel)
+    print("Version: ", session.version)
+    print("LoggedIn: ", session.loggedIn)
     session.logout()
 
 
