@@ -1,3 +1,17 @@
+import requests
+import getpass
+import json
+
+apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
+sessionID = ""
+
+
+def callAPI(apiRequest):
+    response = requests.post(apiURL, json=apiRequest)
+    r_data = json.loads(response.text)
+    return r_data
+
+
 def getApiLevel():
     '''
     since version:1.5.8, api level 1
@@ -34,7 +48,12 @@ def login(user, password):
     api_level integer, you can use that instead of calling getApiLevel after
     login.
     '''
-    pass
+    global sessionID
+    apiCall = {"op": "login", "user": user, "password": password}
+    response = callAPI(apiCall)
+    sessionID = response['content']['session_id']
+    print('login response: ', response)
+    return response
 
 
 def logout():
@@ -42,7 +61,11 @@ def logout():
     Closes your login session. Returns either status-message {"status":"OK"}
     or an error (e.g. {"error":"NOT_LOGGED_IN"})
     '''
-    pass
+    global sessionID
+    apiCall = {"op": "logout", "sid": sessionID}
+    response = callAPI(apiCall)
+    print('logout response: ', response)
+    return response
 
 
 def isLoggedIn():
@@ -338,7 +361,10 @@ def getFeedTree():
 
 
 def test():
-    pass
+    user = input("User: ")
+    password = getpass.getpass("Password: ")
+    login(user, password)
+    logout()
 
 
 if __name__ == '__main__':
