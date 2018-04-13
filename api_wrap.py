@@ -4,15 +4,31 @@ import json
 import config
 
 
-class TTRSSSession(object):
+class TTFeed(object):
+    """docstring for TTFeed"""
+
+    def __init__(self, feed_data):
+        self.url = feed_data['feed_url']
+        self.title = feed_data['title']
+        self.id = feed_data['id']
+        self.unread = feed_data['unread']
+        self.has_icon = feed_data['has_icon']
+        self.cat_id = feed_data['cat_id']
+        self.last_updated = feed_data['last_updated']
+        self.order_id = feed_data['order_id']
+
+    def __repr__(self):
+        return f'{self.title} ({self.unread})'
+
+class TTSession(object):
     """docstring for TTRSSSession"""
 
     def __init__(self, URL, user, password):
         self.sid = ""
         self.URL = URL
-        self.login(user, password)
+        self._login(user, password)
 
-    def login(self, user, password):
+    def _login(self, user, password):
         apiData = {"user": user, "password": password}
         response = self.callAPI("login", apiData)
         self.sid = response['content']['session_id']
@@ -49,11 +65,7 @@ class TTRSSSession(object):
         return response['content']['unread']
 
     def getCounters(self):
-        '''
-        Apparently added for Android app. Always returns same array no matter
-        which flags included. Keeping this for now for the sake of completness.
-        '''
-        data = {'output_mode': 'flc'}
+        data = {}
         response = self.callAPI("getCounters", data)
         return response['content']
 
@@ -320,40 +332,19 @@ def test():
     else:
         password = getpass.getpass("Password: ")
     apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
-    session = TTRSSSession(apiURL, user, password)
-    # print("ApiLevel: ", session.apiLevel)
+    session = TTSession(apiURL, user, password)
     print("Version: ", session.version)
-    # print("LoggedIn: ", session.loggedIn)
     print("Unread: ", session.unread)
-    # print("Counters: ", session.getCounters())
-    # print("Feed Tree: ", session.getFeedTree(False))
-    # print("Feeds: ", session.getFeeds(-3, False, 0, 95, True))
-    # print("getCategories: ", session.getCategories(False, False, True))
-    # print(len(session.getHeadlines(-3)))
-    # print(session.updateArticle(114818, 1, 2))
-    # print(session.updateArticle(114818, 1, 3, "from api"))
-    # print(session.getArticle(114818))
-    # print("Config: ", session.getConfig())
-    # print(session.updateFeed(109))
-    # print(session.getPref("timezone"))
-    # print(session.catchupFeed(1, True))
-    # print(session.getLabels())
-    # print(session.getLabels(89619))
-    # print(session.setArticleLabel("115608", -1026, False))
-    print(session.shareToPublished('test title', 'http://queegmire.com',
-                                   'test content'))
+    feed_data = session.getFeeds(-3, False, 0, 0, True)
+    feeds = []
+    for feed in feed_data:
+        current = TTFeed(feed)
+        feeds.append(current)
+        if current.unread:
+            print(current)
+    print("Counters: ", session.getCounters())
+
     session.logout()
-    '''
-    Parameters:
-        article_ids (comma-separated list of integers) - article IDs to operate
-            on
-        mode (integer) - type of operation to perform (0 - set to false,
-            1 - set to true, 2 - toggle)
-        field (integer) - field to operate on (0 - starred, 1 - published, 2 -
-            unread, 3 - article note since api level 1)
-        data (string) - optional data parameter when setting note field (since
-            api level 1)
-    '''
 
 if __name__ == '__main__':
     test()
