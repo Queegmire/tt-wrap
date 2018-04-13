@@ -320,8 +320,7 @@ class TTSession(object):
         pass
 
 
-
-def test():
+def main():
     if config.user:
         user = config.user
     else:
@@ -331,20 +330,18 @@ def test():
         password = config.password
     else:
         password = getpass.getpass("Password: ")
-    apiURL = "https://home.queegmire.com/tt-rss/api/index.php"
+
+    if config.url:
+        apiURL = config.url
+    else:
+        apiURL = input("URL: ")
+
     session = TTSession(apiURL, user, password)
     print("Version: ", session.version)
     print("Unread: ", session.unread)
-    feed_data = session.getFeeds(-3, False, 0, 0, True)
-    feeds = []
-    for feed in feed_data:
-        current = TTFeed(feed)
-        feeds.append(current)
-        if current.unread:
-            print(current)
-    print("Counters: ", session.getCounters())
 
     session.logout()
 
+
 if __name__ == '__main__':
-    test()
+    main()
