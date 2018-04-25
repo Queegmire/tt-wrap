@@ -322,7 +322,7 @@ class TTSession(object):
         response = self.callAPI("shareToPublished", data)
         return response['content']
 
-    def subscribeToFeed():
+    def subscribeToFeed(self, feed_url, category_id=0):
         '''
         (API level 5 - version:1.7.6)
         Subscribes to specified feed, returns a status code. See
@@ -333,16 +333,20 @@ class TTSession(object):
                 Uncategorized) (int)
             login, password - Self explanatory (string)
         '''
-        pass
+        data = {'feed_url': feed_url, 'category_id': category_id}
+        response = self.callAPI("subscribeToFeed", data)
+        return response['content']
 
-    def unsubscribeFeed():
+    def unsubscribeFeed(self, feed_id):
         '''
         (API level 5 - version:1.7.6)
         Unsubscribes specified feed.
         Parameters:
             feed_id - Feed id to unsubscribe from
         '''
-        pass
+        data = {'feed_id': feed_id}
+        response = self.callAPI("unsubscribeFeed", data)
+        return response['content']
 
 
 def tree_build(root, id, label, depth=0):
@@ -387,6 +391,8 @@ def main():
 
     tree_build(tree_data['categories']['items'], identifier, label)
 
+    print(session.subscribeToFeed("http://feeds.bbci.co.uk/news/rss.xml"))
+    print(session.unsubscribeFeed(122))
     session.logout()
 
 
