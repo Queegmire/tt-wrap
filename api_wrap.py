@@ -2,23 +2,48 @@ import requests
 import getpass
 import json
 import config
+from pprint import pprint as pp
 
 
-class TTFeed(object):
+class TTFeed(dict):
     """docstring for TTFeed"""
 
-    def __init__(self, feed_data):
-        self.url = feed_data['feed_url']
-        self.title = feed_data['title']
-        self.id = feed_data['id']
-        self.unread = feed_data['unread']
-        self.has_icon = feed_data['has_icon']
-        self.cat_id = feed_data['cat_id']
-        self.last_updated = feed_data['last_updated']
-        self.order_id = feed_data['order_id']
+    def __init__(self, id, feed_data={}):
+        self.id = id
+        self.data = {}
+        self.update(feed_data)
+
+    def update(self, feed_data):
+        self.data.update(feed_data)
+
+    @property
+    def title(self):
+        return self.data['title']
+
+    @property
+    def unread(self):
+        return self.data['unread']
 
     def __repr__(self):
         return f'{self.title} ({self.unread})'
+
+
+class TTCategory(object):
+    def __init__(self, id, title):
+        self.id = id
+        self.title = title
+
+    def set_stat(self, cat_data):
+        self.unread = cat_data['unread']
+        if 'order_id' in cat_data:
+            self.order_id = cat_data['order_id']
+
+    def set_dyn(self, cat_data):
+        # 'bare_id', 'name?title', 'type', 'checkbox', 'param'
+        'auxcounter','unread=unread', 'child_unread',  
+    def __repr__(self):
+        return f'{self.title} ({self.unread})'
+
 
 class TTSession(object):
     """docstring for TTRSSSession"""
@@ -320,6 +345,21 @@ class TTSession(object):
         pass
 
 
+def tree_build(root, id, label, depth=0):
+    pad = " " * depth
+    for item in root:
+        t, i = item['id'].split(':')
+        # print(pad, t, i)
+        print(pad, t, item[label])
+        # print(pad, item.keys())
+        temp = item.copy()
+        temp.pop('items', '')
+        print(pad, "*", temp.keys())
+        if t == 'CAT':
+            tree_build(item['items'], id, label, depth + 1)
+            # print(pad, len(item['items']))
+
+
 def main():
     if config.user:
         user = config.user
@@ -339,6 +379,13 @@ def main():
     session = TTSession(apiURL, user, password)
     print("Version: ", session.version)
     print("Unread: ", session.unread)
+
+    tree_data = session.getFeedTree(True)
+
+    identifier = tree_data['categories']['identifier']
+    label = tree_data['categories']['label']
+
+    tree_build(tree_data['categories']['items'], identifier, label)
 
     session.logout()
 
