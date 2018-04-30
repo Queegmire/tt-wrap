@@ -7,6 +7,8 @@ class TTSession(object):
         self.sid = ""
         self.URL = URL
         self._login(user, password)
+        self._version = None
+        self._apiLevel = None
 
     def _login(self, user, password):
         apiData = {"user": user, "password": password}
@@ -26,13 +28,17 @@ class TTSession(object):
 
     @property
     def apiLevel(self):
-        response = self.callAPI("getApiLevel")
-        return response['content']['level']
+        if not self._apiLevel:
+            response = self.callAPI("getApiLevel")
+            self._apiLevel = response['content']['level']
+        return self._apiLevel
 
     @property
     def version(self):
-        response = self.callAPI("getVersion")
-        return response['content']['version']
+        if not self._version:
+            response = self.callAPI("getVersion")
+            self._version = response['content']['version']
+        return self._version
 
     @property
     def loggedIn(self):

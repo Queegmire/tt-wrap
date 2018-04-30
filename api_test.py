@@ -32,7 +32,9 @@ def main():
         apiURL = input("URL: ")
 
     session = TTSession(apiURL, user, password)
+    print("Cached version:", session._version)
     print("Version: ", session.version)
+    print("Cached version:", session._version)
     print("Unread: ", session.unread)
 
     tree_data = session.getFeedTree(True)
