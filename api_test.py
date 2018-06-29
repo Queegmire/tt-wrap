@@ -1,6 +1,6 @@
 from ttwrap import *
 import getpass
-import config
+from config import Config
 
 
 def tree_build(root, id, label, depth=0):
@@ -16,18 +16,18 @@ def tree_build(root, id, label, depth=0):
 
 
 def main():
-    if config.user:
-        user = config.user
+    if Config.USERNAME:
+        user = Config.USERNAME
     else:
         user = input("User: ")
 
-    if config.password:
-        password = config.password
+    if Config.PASSWORD:
+        password = Config.PASSWORD
     else:
         password = getpass.getpass("Password: ")
 
-    if config.url:
-        apiURL = config.url
+    if Config.URL_ROOT:
+        apiURL = Config.URL_ROOT
     else:
         apiURL = input("URL: ")
 
