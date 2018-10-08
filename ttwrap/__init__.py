@@ -6,6 +6,7 @@ class TTSession(object):
     def __init__(self, URL, user, password):
         self.sid = ""
         self.URL = URL
+        self._error = ""
         self._login(user, password)
         self._version = None
         self._apiLevel = None
@@ -13,6 +14,9 @@ class TTSession(object):
     def _login(self, user, password):
         apiData = {"user": user, "password": password}
         response = self.callAPI("login", apiData)
+        if 'error' in response['content'].keys():
+            self._error = response['content']['error']
+            return None
         self.sid = response['content']['session_id']
         return self.sid
 
@@ -24,6 +28,7 @@ class TTSession(object):
         data["op"] = operation
         data["sid"] = self.sid
         response = requests.post(self.URL, json=data)
+        print(self.__dict__)
         return json.loads(response.text)
 
     @property
@@ -83,7 +88,8 @@ class TTSession(object):
         response = self.callAPI("getCategories", data)
         return response['content']
 
-    def getHeadlines(self, feed_id):
+    def getHeadlines(self, feed_id, view_mode='unread', show_excerpt=True,
+                     show_content=True):
         '''
         Parameters:
             feed_id (integer) - only output articles for this feed
@@ -122,7 +128,8 @@ class TTSession(object):
             feed_dates - newest first, goes by feed date
             (nothing) - default
         '''
-        data = {'feed_id': feed_id}
+        data = {'feed_id': feed_id, 'view_mode': view_mode, 
+                'show_excerpt': show_excerpt, 'show_content': show_content}
         response = self.callAPI("getHeadlines", data)
         return response['content']
 
@@ -134,7 +141,7 @@ class TTSession(object):
         data (string) - data parameter when setting note field
         '''
         data = {'article_ids': article_ids, 'mode': mode, 'field': field,
-                'note': 123}
+                'data': note}
         response = self.callAPI("updateArticle", data)
         return response['content']
 
@@ -228,7 +235,7 @@ class TTCategory(object):
         return f'{self.title} ({self.unread})'
 
 
-class TTFeed(dict):
+class TTFeed(dict): 
     def __init__(self, id, feed_data={}):
         self.id = id
         self.data = {}

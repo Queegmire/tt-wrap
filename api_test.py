@@ -3,16 +3,15 @@ import getpass
 from config import Config
 
 
-def tree_build(root, id, label, depth=0):
+def tree_build(root, depth=0, unread=False):
     pad = " " * depth
     for item in root:
         t, i = item['id'].split(':')
-        print(pad, t, item[label])
-        temp = item.copy()
-        temp.pop('items', '')
-        print(pad, "*", temp.keys())
         if t == 'CAT':
-            tree_build(item['items'], id, label, depth + 1)
+            print(pad, '+', item['name'])
+            tree_build(item['items'], depth + 2)
+        else:
+            print(f'{pad}- {item["name"]} ({item["unread"]})')
 
 
 def main():
@@ -32,16 +31,16 @@ def main():
         apiURL = input("URL: ")
 
     session = TTSession(apiURL, user, password)
-    print("Cached version:", session._version)
     print("Version: ", session.version)
-    print("Cached version:", session._version)
     print("Unread: ", session.unread)
-
     tree_data = session.getFeedTree(True)
-    identifier = tree_data['categories']['identifier']
-    label = tree_data['categories']['label']
-    tree_build(tree_data['categories']['items'], identifier, label)
-
+    print(session.updateArticle(134311, 2, 3, "foo"))
+    for item in session.getHeadlines(-4):
+        #print(item.keys())
+        print(f"#{item['id']}: {item['title']} ({item['feed_title']})")
+    # tree_build(tree_data['categories']['items'])
+    # for item in session.getCounters(output_mode='flc'):
+    #     print(item)
     session.logout()
 
 
