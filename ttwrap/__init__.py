@@ -3,7 +3,25 @@ import json
 
 
 class TTSession(object):
+    '''Holds the state for the current TT-RSS session
+
+    Special feed IDs are as follows:
+        -1 starred
+        -2 published
+        -3 fresh
+        -4 all articles
+        0 - archived
+        IDs < -10 labels
+    Special category IDs are as follows:
+        0 Uncategorized
+        -1 Special (e.g. Starred, Published, Archived, etc.)
+        -2 Labels
+        -3 All feeds, excluding virtual feeds (e.g. Labels and such)
+        -4 All feeds, including virtual feeds
+    '''
+
     def __init__(self, URL, user, password):
+        '''Logs in and populates basic session info'''
         self.sid = ""
         self.URL = URL
         self._error = ""
@@ -12,23 +30,33 @@ class TTSession(object):
         self._apiLevel = None
 
     def _login(self, user, password):
+        '''Attempt login with saved credentials'''
         apiData = {"user": user, "password": password}
         response = self.callAPI("login", apiData)
         if 'error' in response['content'].keys():
+            # rrjtodo: should this be an exception
             self._error = response['content']['error']
             return None
         self.sid = response['content']['session_id']
         return self.sid
 
     def logout(self):
+        '''Logout code
+
+        rrjtodo: should this be called in __del__?
+        '''
         response = self.callAPI("logout")
         self.sid = ""
 
     def callAPI(self, operation, data={}):
+        '''Makes the call to the underlying API
+
+        Takes an operation and its coresponding data, adds the current sessin
+        sid and passes the json object to the API via requests.
+        '''
         data["op"] = operation
         data["sid"] = self.sid
         response = requests.post(self.URL, json=data)
-        print(self.__dict__)
         return json.loads(response.text)
 
     @property
@@ -56,24 +84,29 @@ class TTSession(object):
         return response['content']['unread']
 
     def getCounters(self):
+        '''get counters for all feeds, labels and categories
+
+        rrjtodo: api documentation doesn't match underlying code. Seems to have
+        been added for tt-rss android app, can probably remove from this wrapper
+        '''
         data = {}
         response = self.callAPI("getCounters", data)
         return response['content']
 
     def getFeedTree(self, include_empty):
+        '''Returns a complete tree of categories and feeds
+
+        Only special categories have unread counts for performance reasons.
+        root of tree is in the list ['categories']['items']
+        '''
         data = {'include_empty': include_empty}
         response = self.callAPI("getFeedTree", data)
         return response['content']
 
     def getFeeds(self, cat_id, unread_only, limit, offset, include_nested):
-        '''
+        '''Returns a list of feeds with counts
+
         limit = 0 -> all feeds (offset ignored)
-        Special category IDs are as follows:
-            0 Uncategorized
-            -1 Special (e.g. Starred, Published, Archived, etc.)
-            -2 Labels
-            -3 All feeds, excluding virtual feeds (e.g. Labels and such)
-            -4 All feeds, including virtual feeds
         '''
         data = {'cat_id': cat_id, 'unread_only': unread_only,
                 'limit': limit, 'offset': offset,
@@ -82,7 +115,14 @@ class TTSession(object):
         return response['content']
 
     def getCategories(self, unread_only, enable_nested, include_empty):
-        '''Nested returns a flat list of only topmost categories'''
+        '''Returns a list of categories with unread counts
+
+        Includes (-1)Special and (-2)Labels categories
+        unread_only: bool - only return categories with unread feeds
+        enable_nested: bool - nested mode only returns top level
+            useful for populating top level only for collapsed UI
+        include_empty: include categories with no feeds
+        '''
         data = {'unread_only': unread_only, 'enable_nested': enable_nested,
                 'include_empty': include_empty}
         response = self.callAPI("getCategories", data)
@@ -92,41 +132,27 @@ class TTSession(object):
                      show_content=True):
         '''
         Parameters:
-            feed_id (integer) - only output articles for this feed
-            limit (integer) - limits the amount of returned articles
-            skip (integer) - skip this amount of feeds first
-            filter (string) - currently unused (?)
-            is_cat (bool) - requested feed_id is a category
-            show_excerpt (bool) - include article excerpt in the output
-            show_content (bool) - include full article text in the output
-            view_mode (string) all_articles, unread, adaptive, marked, updated
-            include_attachments (bool) - include article attachment
-            since_id (integer) - returns articles with id greater than since_id
-            include_nested (boolean) - include articles from child categories
-            order_by (string) - override default sort order
-            sanitize (bool) - sanitize content (default: true)
-            force_update (bool) - try to update feed before showing headlines
-                (default: false)
-            has_sandbox (bool) - indicate support for sandboxing of iframes
-                (default: false)
-            include_header (bool) - adds status information when returning
-                headlines, instead of array(articles) return value changes to
-                array(header, array(articles))
-            search (string) - search query (e.g. a list of keywords)
-            search_mode (string) - all_feeds, this_feed (default), this_cat
-                (category containing requested feed)
-            match_on (string) - ignored
-        Special feed IDs are as follows:
-            -1 starred
-            -2 published
-            -3 fresh
-            -4 all articles
-            0 - archived
-            IDs < -10 labels
-        Sort order values:
-            date_reverse - oldest first
-            feed_dates - newest first, goes by feed date
-            (nothing) - default
+            feed_id: Int - feed to enumerate
+            view_mode: String - all_articles, unread, adaptive, marked, updated
+            show_excerpt: Bool - include article excerpt in the output
+            show_content: Bool - include full article text in the output
+            ============== rrjtodo: which of the below should be supported
+            is_cat: Bool - requested feed_id is a category
+            include_attachments: Bool - include article attachment
+            since_id: Int - returns articles with id greater than since_id
+            include_nested: Bool - include articles from child categories
+            order_by: String - override default sort order:
+                date_reverse (oldest first), feed_dates (newest first)
+            sanitize: Bool:true - sanitize content
+            has_sandbox: Bool:false - indicate support of sandboxing of iframes
+            include_header: Bool - adds status information when returning
+                instead of array(articles) -> array(header, array(articles))
+            search: String - search query (e.g. a list of keywords)
+            search_mode: String - all_feeds, this_feed (default),
+                this_cat (category containing requested feed)
+            limit: Int - number of articles to return (0?)
+            skip: Int - Offset for enumeration
+            force_update: bool:false - update feed before showing headlines
         '''
         data = {'feed_id': feed_id, 'view_mode': view_mode, 
                 'show_excerpt': show_excerpt, 'show_content': show_content}
