@@ -2,18 +2,23 @@
 
 Accessing Tiny Tiny RSS via python with some simple abstractions to simplify the problem.
 
-## Goals
+## General goals
 
-+ Learn about wrapping an API via python
-+ Build this into fully fledged python module
-+ Create a tool to help organize my rss feeds from outside the tt-rss interface
+Create a user friendly stateful wrapper for the tt-rss API
 
-## Todo
++ Expose simplified API 
++ Set up proper unit tests using Travis
++ Create documentation using sphinx
 
-- [ ] Simple stub functions for tt-rss api calls - direct mapping from api to functions for now
-- [ ] Make generic api request functionality - Each stub will pass information to this to make web request and it will return a json object
-- [ ] Make generic json response parser
-- [ ] Create general session object to hold tt-rss state while manipulating entries
+## Next Steps
+
++ Decide on what operations need to be exposed and/or hidden
++ Create internal structures to support any abstractions from the above choices
++ Create account with know state on server for testing purposes
++ Write basic unit tests to verify Travis set up correctly
++ Add sphinx support and add API outline to documentation
 
 ## Resources
-+ tt-rss api guide - https://git.tt-rss.org/git/tt-rss/wiki/ApiReference
++ Tiny Tiny RSS api guide - https://git.tt-rss.org/git/tt-rss/wiki/ApiReference
++ TravisCI - https://travis-ci.org/
++ Sphinx - http://www.sphinx-doc.org/
