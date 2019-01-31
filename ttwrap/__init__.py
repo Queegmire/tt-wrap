@@ -262,6 +262,15 @@ class TTCategory(object):
 
 
 class TTFeed(dict): 
+    {
+        "feed_url": "http://feeds2.feedburner.com/rsspect/fJur",
+        "id": 27,
+        "unread": 0,
+        "has_icon": true,
+        "cat_id": 1,
+        "last_updated": 1539065812,
+        "order_id": 4
+    },
     def __init__(self, id, feed_data={}):
         self.id = id
         self.data = {}
