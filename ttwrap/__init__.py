@@ -266,7 +266,7 @@ class TTFeed(dict):
         "feed_url": "http://feeds2.feedburner.com/rsspect/fJur",
         "id": 27,
         "unread": 0,
-        "has_icon": true,
+        "has_icon": True,
         "cat_id": 1,
         "last_updated": 1539065812,
         "order_id": 4
